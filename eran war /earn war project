@@ -1,0 +1,174 @@
+⛽ Iran War Impact on Gas Prices (USA)
+📌 Overview
+This dataset analyzes the impact of geopolitical events (specifically the Iran war situation) on U.S. gas prices across different states.
+It captures price changes over time and highlights how fuel costs shifted before and after the conflict, making it useful for economic, policy, and data science analysis.
+________________________________________
+📊 Dataset Description
+Each row represents a U.S. state, along with regional classification and gas price metrics at different time points.
+________________________________________
+📂 Column Explanation
+🗺️ Location Information
+Column	Description
+state	Name of the U.S. state
+region	Geographic region of the state (e.g., West, Midwest, South, Northeast)
+________________________________________
+⛽ Gas Price Data (Time-Based)
+Column	Description
+gas_price_jan08_2026	Gas price before major geopolitical escalation (baseline)
+gas_price_prewar_feb27	Gas price shortly before the war
+gas_price_mar19_2026	Gas price after the war impact
+
+📈 Price Change Metrics
+Column	Description
+price_increase_since_war	Absolute increase in gas price after the war
+pct_increase_since_war	Percentage increase in gas price
+price_vs_national_avg	Difference between state price and national average
+ 
+This are all the query that are use to find the insight given blow 
+use [eran war project];
+
+select*from iran_war_gas_prices_by_state;
+select*from iran_war_key_events_timeline;
+select*from iran_war_oil_prices_daily_2026
+--we use begin transaction --to roll back the data --
+begin transaction;
+
+-- we use aggrate function --
+select sum (war_day) as sum_revenue from iran_war_key_events_timeline
+select avg (war_day) as sum_revenue from iran_war_key_events_timeline
+select max (war_day) as sum_revenue from iran_war_key_events_timeline
+--we use gropu by--
+select category,sum (war_day)as sum_revenue from iran_war_key_events_timeline group by category;
+select category,avg (war_day)as sum_revenue from iran_war_key_events_timeline group by category;
+select category,max(war_day)as sum_revenue from iran_war_key_events_timeline group by category;
+select count(*)as category from iran_war_key_events_timeline;
+--top 5 event--
+select top 5 *from iran_war_key_events_timeline;
+
+--where clause--
+select*from iran_war_key_events_timeline where event_title='War Begins'and war_day>1;
+
+--or --
+select*from iran_war_key_events_timeline where event_title='War Begins' or war_day>11;
+
+--not in clause--
+
+select*from iran_war_key_events_timeline where event_title= 'War Begins';
+
+--data cleaning--
+select * from iran_war_gas_prices_by_state where state  IS NULL or region is null or gas_price_mar19_2026 is null or gas_price_prewar_feb27 is null or gas_price_jan08_2026 is null or price_increase_since_war is null or pct_increase_since_war is null or price_vs_national_avg is null or  source is null;
+select * from iran_war_key_events_timeline where date is null or event_title is null or description  is null or war_day is null or category is null or brent_price_that_day is null or source is null;
+
+-- but in any column if null value is there 
+update iran_war_gas_prices_by_state set price_increase_since_War='unkown' where price_increase_since_war is NULL;
+--
+
+--window function--
+
+select*from iran_war_key_events_timeline;
+
+--window functions and if functions 
+
+select * ,ROW_NUMBER() over(order by event_title desc) as rn_number from iran_war_key_events_timeline;
+select * ,ROW_NUMBER() over(order by region desc) as rn_number from  iran_war_gas_prices_by_state;
+---- LAG window function--
+
+select date, brent_price_that_day ,LAG(brent_price_that_day) over(order by date) as prev_price from iran_war_key_events_timeline;
+select state,gas_price_mar19_2026,LAG(gas_price_mar19_2026) OVER (order by state) as prev_price from iran_war_gas_prices_by_state;
+select date,brent_usd_barrel,LAG (brent_usd_barrel) over (order by date) as prev_price from iran_war_oil_prices_daily_2026;
+
+-- price change day to day--
+
+select date ,brent_price_that_day , brent_price_that_day-LAG(brent_price_that_day) over (order by date) as price_change from iran_war_key_events_timeline;
+select state,gas_price_mar19_2026,LAG(gas_price_mar19_2026) over (order by state) as price_change from iran_war_gas_prices_by_state;
+select date,brent_usd_barrel,LAG (brent_usd_barrel) over (order by date) as price_change from iran_war_oil_prices_daily_2026;
+
+-- rank--
+--find peak oil price days --
+
+select date,event_title, brent_price_that_day , RANK() over (order by brent_price_that_day desc ) as price_rank from iran_war_key_events_timeline;
+select state, region,gas_price_mar19_2026,RANK () over (order by gas_price_mar19_2026 desc) as price_rank from iran_war_gas_prices_by_state;
+select date,War_day,brent_usd_barrel,RANK() OVER (ORDER BY brent_usd_barrel desc) as price_rank from iran_war_oil_prices_daily_2026;
+
+---- partition compare events within same category --
+
+select category,date,event_title,brent_price_that_day,rank() over(partition by category order by brent_price_that_day desc) as rank_in_category from iran_war_key_events_timeline;
+select region,state, gas_price_mar19_2026 ,rank () over (partition by state order by  gas_price_mar19_2026  desc) as rank_in_state from iran_war_gas_prices_by_state;
+select date ,brent_usd_barrel,War_day,rank () over (partition  by date order by brent_usd_barrel desc) as rank_in_date from iran_war_oil_prices_daily_2026;
+
+
+---- dense rank --
+select date,brent_price_that_day, dense_RANK() over(order by brent_price_that_day desc) as dense_Rank_prices from iran_war_key_events_timeline;
+select state, gas_price_mar19_2026 ,dense_rank() over (order by  gas_price_mar19_2026 desc) as dense_rank_prices from iran_war_gas_prices_by_state;
+select date ,brent_usd_barrel,dense_rank () over (order by brent_usd_barrel desc) as dense_rank_oil from iran_war_oil_prices_daily_2026;
+
+-- sum --used for sum of data -
+
+select date,brent_price_that_day, sum(brent_price_that_day) over(order by date) as running_total from iran_war_key_events_timeline;
+select state, gas_price_mar19_2026,sum ( gas_price_mar19_2026) over (order by state) as running_total from iran_war_gas_prices_by_state;
+select date,brent_usd_barrel,sum (brent_usd_barrel) over (order by date )as running_total from iran_war_oil_prices_daily_2026;
+
+---- max--
+select date,brent_price_that_day ,max(brent_price_that_day) over () as max_price from iran_war_key_events_timeline;
+select state, gas_price_mar19_2026,max ( gas_price_mar19_2026) over (order by state) as running_total from iran_war_gas_prices_by_state;
+select date,brent_usd_barrel,max (brent_usd_barrel) over (order by date )as running_total from iran_war_oil_prices_daily_2026;
+
+
+---- lead -- next row value --
+select date,brent_price_that_day ,lead(brent_price_that_day) over (order by date) as next_price from iran_war_key_events_timeline;
+select state,gas_price_mar19_2026,lead (gas_price_mar19_2026) over (order by state) as next_price from iran_war_gas_prices_by_state;
+select date,brent_usd_barrel,lead (brent_usd_barrel)over (order by date) as next_price from iran_war_oil_prices_daily_2026
+
+-- coalsece -- handle null values and fill with 0 --
+select date,COALESCE(LEAD(brent_price_that_day)  over (order by date),5)  from iran_war_key_events_timeline;
+select state,COALESCE(LEAD(gas_price_mar19_2026) OVER (ORDER BY STATE),5) FROM iran_war_gas_prices_by_state;
+select date ,coalesce(lead(brent_usd_barrel) over (order by date ),6) from iran_war_oil_prices_daily_2026;
+
+
+--if-else function inside sum --
+select case when category ='Policy Response' THEN 1 else 0 end as military_count from iran_war_key_events_timeline;
+select case when state ='California' then 2 else 8 end as oregon from iran_war_gas_prices_by_state;
+
+---- if else with price  using between --
+
+select date,brent_price_that_day,case when  brent_price_that_day between 100 and 105 THEN 'MEDIUM' else 'other' end as price_category from iran_war_key_events_timeline;
+select state,gas_price_mar19_2026,case when gas_price_mar19_2026 between 105 and 200 then 'medium' else 'other' end as revenue_category from iran_war_gas_prices_by_state;
+select date ,brent_usd_barrel,case when brent_usd_barrel between 50 and 100 then 'medium' else 'other' end as oil_category from iran_war_oil_prices_daily_2026;
+
+
+
+--insights-- for  iran_war_gas_prices_by_state;--
+
+select * from iran_war_gas_prices_by_state;
+--top 5 state with heighest gas price-- heighest fuel cost--
+
+ select top 5 state, gas_price_mar19_2026 from iran_war_gas_prices_by_state order by gas_price_mar19_2026 desc;
+
+ --lowest gas price-- cheapest fuel reagion--
+
+  select top 5 state, gas_price_mar19_2026 from iran_war_gas_prices_by_state order by gas_price_mar19_2026 asc;
+
+  ---average gas price--
+
+  select AVG(gas_price_mar19_2026 ) as avg_price from iran_war_gas_prices_by_state;
+
+  -- price increase after war  wich state show the biggest jump
+
+  select state, price_increase_since_war from iran_war_gas_prices_by_state order by  price_increase_since_war desc;
+  
+  -- region wise average -- which regioin is expensive--
+
+  select region , AVG (gas_price_mar19_2026) as avg_price from iran_war_gas_prices_by_state group by region;
+
+  ---count off state by region--
+
+  select region ,count(*) as total_states from iran_war_gas_prices_by_state group by region;
+
+
+  -- month -to month-- growth --feb-march
+
+  SELECT state, gas_price_mar19_2026, gas_price_prewar_feb27, (gas_price_mar19_2026 - gas_price_prewar_feb27) AS feb_to_mar_growth from iran_war_gas_prices_by_state order by feb_to_mar_growth desc;
+
+
+
+
