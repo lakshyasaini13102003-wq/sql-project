@@ -1,0 +1,180 @@
+Finance & Economics Dataset Analysis
+📌 Overview
+This dataset provides a comprehensive view of financial markets and macroeconomic indicators over time. It combines stock market data with key economic metrics, making it useful for:
+🧾 Dataset Description
+Each row represents a snapshot of financial and economic conditions for a given date.
+📂 Column Description
+🗓️ Basic Information
+Column	Description
+Date	The specific date of the recorded data
+Stock Index	The stock market index (e.g., Dow Jones, S&P 500)
+________________________________________
+📈 Stock Market Data
+Column	Description
+Open Price	Price of the stock index at market opening
+Close Price	Price at market closing
+Daily High	Highest price during the day
+Daily Low	Lowest price during the day
+Trading Volume	Total number of shares traded
+________________________________________
+🌍 Macroeconomic Indicators
+Column	Description
+GDP Growth (%)	Economic growth rate of the country
+Inflation Rate (%)	Rate at which prices increase
+Unemployment Rate (%)	Percentage of unemployed workforce
+Interest Rate (%)	Central bank interest rate
+Consumer Confidence Index	Measure of consumer optimism
+________________________________________
+🏛️ Government & Corporate Metrics
+Column	Description
+Government Debt (Billion USD)	Total government debt
+Corporate Profits (Billion USD)	Earnings of corporations
+________________________________________
+💱 Forex & Commodities
+Column	Description
+Forex USD/EUR	Exchange rate between USD and Euro
+Forex USD/JPY	Exchange rate between USD and Japanese Yen
+Crude Oil Price (USD per Barrel)	Price of crude oil
+Gold Price (USD per Ounce)	Price of gold
+________________________________________
+🏠 Market & Economic Activity
+Column	Description
+Real Estate Index	Performance of real estate market
+Retail Sales (Billion USD)	Total retail sales value
+Consumer Spending (Billion USD)	Total consumer expenditure
+________________________________________
+⚠️ Risk & Business Activity
+Column	Description
+Bankruptcy Rate (%)	Percentage of bankrupt businesses
+Mergers & Acquisitions Deals	Number of M&A deals
+Venture Capital Funding (Billion USD)	Investment in startups
+Query for dataset use to find all the insight
+select * from finance_economics_dataset;
+
+use finance89;
+select max (Open_Price) as total_revenue from finance_economics_dataset;
+
+select min (Open_price) as total_revenue from finance_economics_dataset;
+
+
+-- aggrate function--
+
+select Open_price,max (Close_Price) as Total_Revenue from finance_economics_dataset group by Open_Price;
+
+select Open_price,min (Close_Price) as Total_Revenue from finance_economics_dataset group by Open_Price;
+
+select Open_price,avg (Close_Price) as Total_Revenue from finance_economics_dataset group by Open_Price;
+
+select Open_price,count (Close_Price) as Total_Revenue from finance_economics_dataset group by Open_Price;--
+
+select Open_price,sum (Close_Price) as Total_Revenue from finance_economics_dataset group by Open_Price;
+
+select*from finance_economics_dataset where Stock_Index = 'Dow Jones';
+
+delete from finance_economics_dataset where Stock_Index = 'S&P 500';
+
+alter table finance_economics_dataset alter column Close_Price varchar (50);
+
+select top 5 * from finance_economics_dataset;
+
+
+select top 5 * from finance_economics_dataset  dsc;
+
+
+select top 5 * from finance_economics_dataset order by Close_Price asc;
+
+
+
+--group by clause 
+
+
+select Stock_Index,sum (Open_Price) as total_revenue from finance_economics_dataset group by Stock_Index;
+
+
+select Stock_Index,max (Open_Price) as total_revenue from finance_economics_dataset group by Stock_Index;
+
+select Stock_Index,Daily_low, max (Open_Price) as total_revenue from finance_economics_dataset group by Stock_Index, Daily_low;
+
+--where clause--
+
+select*from finance_economics_dataset where Stock_Index='Dow Jones' and Trading_Volume > 2670411;
+
+ select*from finance_economics_dataset where Stock_Index='Dow Jones' and Trading_Volume>13098297;
+
+ --or clause--
+
+ select*from finance_economics_dataset where Stock_Index='Dow Jones' or Trading_Volume > 2670411;
+
+ --order by clause ----
+
+
+select Stock_Index,Daily_low, max (Open_Price) as total_revenue from finance_economics_dataset group by Stock_Index, Daily_low order by total_revenue desc;
+
+select Stock_Index,Daily_low, max (Open_Price) as total_revenue from finance_economics_dataset group by Stock_Index, Daily_low order by total_revenue desc;
+
+
+SELECT Stock_Index, Daily_Low, MAX(Open_Price) AS total_revenue 
+FROM finance_economics_dataset 
+GROUP BY Stock_Index, Daily_Low 
+ORDER BY total_revenue DESC;
+
+--not in clause--
+
+select*from finance_economics_dataset where Stock_Index= ' Dow Jones';
+select*from finance_economics_dataset where Stock_Index!= ' Dow Jones';
+
+--not--
+
+update finance_economics_dataset set Stock_Index=' Dow Jones';
+
+delete from finance_economics_dataset where Daily_High =2143.69995117188;
+
+rollback ;
+
+--data cleaning--
+
+select* from finance_economics_dataset where date is null or Stock_Index is null or Open_Price is null or Close_Price is null or Daily_High is null or Daily_Low is null or Trading_Volume IS NULL OR GDP_Growth is null or Inflation_Rate is null or Unemployment_Rate is null or Interest_Rate is null or Consumer_Confidence_Index is null or Government_Debt_Billion_USD is null or Corporate_Profits_Billion_USD is null or Forex_USD_EUR is null or Forex_USD_JPY is null or Crude_Oil_Price_USD_per_Barrel is null or Gold_Price_USD_per_Ounce is  null or Real_Estate_Index is null or Retail_Sales_Billion_USD is null or Bankruptcy_Rate is null or Mergers_Acquisitions_Deals is  null or Venture_Capital_Funding_Billion_USD is null  or Consumer_Spending_Billion_USD is null;
+
+-- window function--
+select *, Row_number () over ( order by Open_Price desc) as rn_number from finance_economics_dataset;
+-- lag-- datat of previous days --
+
+select Date,Close_price ,lag ( Close_Price ) over ( order by Date) as prev_price from finance_economics_dataset;
+-- price day to day change --
+
+select Date,Close_price ,lag ( Close_Price ) over ( order by Date) as change_price from finance_economics_dataset;
+-- rank-- function --
+
+select Date,Close_price ,rank  ()over ( order by Close_price desc) as  price_rank from finance_economics_dataset;
+select Date,Close_price ,rank  ()over ( order by Close_price desc) as  performance_rank from finance_economics_dataset;
+
+-- dence rank--
+
+select Date,Close_price, dense_rank () over (order by Close_price desc)  as dense_rank_price from  finance_economics_dataset; 
+
+
+--insights -- 
+
+--view data --
+select* from finance_economics_dataset;
+
+-- top 5 highest closing price --
+
+select top 5 Date, Close_Price from finance_economics_dataset order by Close_Price desc;
+
+--  heihest GDP growth--
+
+SELECT top 10 Date , GDP_Growth from finance_economics_dataset order by GDP_Growth DESC;
+
+-- heighest counsumer spending --
+select top 5 Date , Consumer_Spending_Billion_USD FROM finance_economics_dataset ORDER BY  Consumer_Spending_Billion_USD DESC;
+
+-- HEIGH INFLATION PERIOD--
+SELECT Date , Inflation_Rate from finance_economics_dataset where Inflation_Rate >8;
+
+
+
+-- high bankruptcy  rate --
+
+select top 5 Date ,Bankruptcy_Rate from finance_economics_dataset order by Bankruptcy_Rate;
+
